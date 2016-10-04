@@ -1,0 +1,84 @@
+<html>
+<head>
+    <title></title>
+
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/fullpage.min.css">
+    <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+</head>
+<body>
+    <a class="dev-link" href="./custom.html">Custom Dev</a>
+    <main class="main-content" id="fullpage">
+        <section class="section container container--1">
+            <div class="slide__wrapper">
+                <h1>Expandable Section</h1>
+            </div><!-- /.slide__wrapper -->
+
+            <div class="card-detail js-card-detail">
+                <div class="card-detail__wrapper">
+                <p>Bacon ipsum dolor amet swine sirloin shank t-bone, salami doner biltong. Landjaeger meatloaf short ribs kevin pork belly spare ribs sausage turkey beef ribs bacon shank rump turducken drumstick chuck. Corned beef spare ribs leberkas, brisket jerky salami beef ribs hamburger shoulder ribeye ham alcatra pork belly tongue sausage. Bresaola biltong pancetta short ribs. Cupim andouille short ribs kevin pork chop. Cupim ball tip beef frankfurter.</p>
+
+                <p>Prosciutto shankle shoulder pastrami. Ball tip hamburger ground round pork belly cupim alcatra turkey pork loin prosciutto shankle tongue chuck short loin bresaola cow. Sirloin fatback bacon hamburger shankle, ham hock pig bresaola brisket jerky capicola. Meatball chicken sausage, frankfurter beef capicola pastrami picanha.</p>
+
+                <p>Picanha sirloin kielbasa hamburger ribeye chuck pork chop fatback biltong jowl alcatra ball tip leberkas. Venison jerky swine, ground round biltong pastrami spare ribs salami. Cupim bacon tenderloin prosciutto leberkas frankfurter strip steak alcatra. Ham jerky prosciutto burgdoggen cupim capicola andouille. Pork loin pork t-bone turducken alcatra leberkas sausage ham pastrami shank bacon drumstick meatloaf burgdoggen swine.</p>
+
+                <p>Ribeye t-bone chuck kielbasa, shoulder porchetta shank meatball strip steak spare ribs tongue chicken andouille. Short loin capicola chicken swine cow. Strip steak swine cow, bacon pastrami flank salami pig short loin tenderloin picanha turkey tri-tip. Shoulder sausage boudin, pork loin chuck brisket jowl pork chop porchetta bacon ribeye t-bone pastrami.</p>
+
+                <p>Venison pig swine tri-tip, leberkas sirloin boudin ham hock ribeye. Pig picanha chuck porchetta rump. Boudin chuck strip steak ground round filet mignon, ribeye kielbasa andouille leberkas shankle shoulder. Biltong pastrami meatloaf, cupim t-bone cow drumstick jowl.</p>
+
+                <p>Does your lorem ipsum text long for something a little meatier? Give our generator a try… it’s tasty!</p>
+                </div>
+            </div><!-- /.card-detail -->
+
+            <span class="js-toggle-card-detail toggle-card-detail"></span>
+        </section>
+        <section class="section container container--2">
+                <div class="slide" id="slide1">
+                    <div class="slide__wrapper">
+                        <div class="intro">
+                            <h1>Clickable</h1>
+                            <p>
+                                You can even click on the navigation and jump directly to another section.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide" id="slide2">
+                    <div class="slide__wrapper">
+                        <h1>Slide 2</h1>
+                    </div>
+                </div>
+        </section>
+        <section class="section container container--3">
+            <div class="slide__wrapper">
+                <h1>Hello World</h1>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/fullPage.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            window.location.hash = '#welcome';
+            // $.fn.fullpage.silentMoveTo('firstSlide', 2);  // Another way to jump to welcome page without animation
+
+            $('.js-toggle-card-detail').on('click', function() {
+                $('.js-card-detail').slideToggle().toggleClass('show');
+            });
+
+            $('#fullpage').fullpage({
+                anchors: ['participate', 'vision', 'welcome'],
+                autoScrolling: false,
+                fitToSection: false,
+                navigation: true,
+                navigationPosition: 'left',
+                navigationTooltips: ['Participate', 'Vision', 'Welcome'],
+                recordHistory: false,
+                resetSliders: true,
+                sectionsColor: ['#000', '#1BBC9B', '#7E8F7C']
+            });
+        });
+    </script>
+</body>
+</html>
