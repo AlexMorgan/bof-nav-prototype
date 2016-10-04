@@ -29,7 +29,7 @@ var slideNavigation = {
             $prevActiveSlide.addClass('active');
     },
 
-    checkForActiveSlide: function() {
+    checkActiveSlide: function() {
         var direction = this.determineScrollDir();
 
         if (direction === 'down') {
@@ -37,7 +37,7 @@ var slideNavigation = {
                 this.activateNextSlide();
             }
         } else if (direction === 'up') {
-            if ( this.calcPrevSlideDepth(direction) >= 0 ) {
+            if ( this.calcNextSlideDepth(direction) >= 0 ) {
                 this.activatePrevSlide();
             }
         }
@@ -146,9 +146,9 @@ var slideNavigation = {
         var self = this;
 
         $(window).on('scroll', self.throttle(function () {
-            self.checkForActiveSlide();
+            self.checkActiveSlide();
             self.determineScrollDir();
-        }, 100));
+        }, 50));
 
         $(window).resize(self.throttle(function(event) {
             self.setSlideHeight()
