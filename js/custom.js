@@ -3,12 +3,14 @@ var slideNavigation = {
         introSlide: 'welcome',
         navigation: '.navigation',
         slideContainer: '.js-container',
-        slideWrapper: '.js-slide__wrapper'
+        slideWrapper: '.js-slide__wrapper',
+        horizontalSlide: '.js-slide'
     },
 
     selections: {
         $navigationAnchor: $('.js-navigation__anchor'),
-        $slide: $('.js-container')
+        $slideContainer: $('.js-container'),
+        $horizontalSlide: $('.js-slide')
     },
 
     settings: {
@@ -38,7 +40,8 @@ var slideNavigation = {
     },
 
     checkActiveSlide: function() {
-        var direction = this.determineScrollDir();
+        var direction = this.determineScrollDir(),
+            slideHeight = this.calcSlideHeight(); // Use slide height and set the next slide to active when at halfway point
 
         if (direction === 'down') {
             if ( this.calcNextSlideDepth(direction) <= 0 ) {
@@ -46,7 +49,7 @@ var slideNavigation = {
                 this.updateHash();
             }
         } else if (direction === 'up') {
-            if ( this.calcNextSlideDepth(direction) >= 0 ) {
+            if ( this.calcNextSlideDepth(direction) >= 0) {
                 this.activatePrevSlide();
                 this.updateHash();
             }
@@ -67,12 +70,39 @@ var slideNavigation = {
         return window.innerHeight;
     },
 
+    createHorizontalSlide: function() {
+        var self = this;
+
+        this.selections.$slideContainer.each(function(i,v) {
+            var slidesLength = $(this).find('.js-slide').length;
+
+            if (slidesLength > 0) {
+                var slideWidthPerc = 100/slidesLength + '%',
+                    slidesContainerPerc = 100 * slidesLength + '%';
+
+                $(this).find('.js-slide').css('width', slideWidthPerc)
+                    .addClass('sn-slides')
+                    .wrapAll('<div class="slidesWrapper" style="width:' + slidesContainerPerc + ';"></div>');
+
+                $('.slidesWrapper').wrap('<div class="horizontal-slides"></div>');
+
+                $('.horizontal-slides').append('<div class="horizontal-nav"><a data-horz-nav="prev" class="horz-nav__btn horz-nav--prev" href="#">Prev</a> <a data-horz-nav="next" class="horz-nav__btn horz-nav--next" href="#">Next</a></div>');
+                // self.createHorizontalNav();
+                self.setInitActiveHorzSlide(); // Set the active slide within this container
+            }
+        });
+    },
+
+    createHorizontalNav: function() {
+        $('.slidesWrapper').append('<div class="horizontal-nav"><a data-horz-nav="prev" class="horz-nav__btn horz-nav--prev" href="#">Prev</a> <a data-horz-nav="next" class="horz-nav__btn horz-nav--next" href="#">Next</a></div>');
+    },
+
     createNavigation: function() {
         var list = '<ul class="navigation__items"></ul>',
             wrapper = '<div class="navigation"></div>',
             $list = $(list);
 
-        var keys = this.selections.$slide.map(function(i, val) {
+        var keys = this.selections.$slideContainer.map(function(i, val) {
             return $(this).data('anchor');
         });
 
@@ -141,16 +171,19 @@ var slideNavigation = {
     },
 
     setFirstSlideActive: function() {
-        this.selections.$slide.first().addClass('active');
+        this.selections.$slideContainer.first().addClass('active');
     },
 
+    setInitActiveHorzSlide: function() {
+        $('.container .slide:first-child').addClass('active');
+    },
 
     setSlideHeight: function() {
         var self = this;
 
-        this.selections.$slide.each(function(index,val) {
+        this.selections.$slideContainer.each(function(index,val) {
             $(val).css('height', self.calcSlideHeight());
-            $(val).children('.slide__align').css('height', self.calcSlideHeight());
+            $(val).find('.slide__align').css('height', self.calcSlideHeight());
         });
     },
 
@@ -201,6 +234,10 @@ var slideNavigation = {
       };
     },
 
+    transitionHorzSlide: function($el, distance) {
+        $el.css('transform', 'translateX(' + distance + 'px)');
+    },
+
     updateHash: function() {
         var $activeSlide = this.currentActiveSlide(),
             hash = $activeSlide.data('anchor');
@@ -225,10 +262,26 @@ var slideNavigation = {
             self.scrollToSlide('[data-anchor="' + anchor + '"]');
         });
 
+        $('body').on('click', '.horz-nav--prev, .horz-nav--next', function(e) {
+            e.preventDefault();
+            var $slides = $(this).parents('.horizontal-slides').find('.slidesWrapper'),
+                $currentActive = $slides.children('.active'),
+                currentIndex = $currentActive.index(), // one-based index
+                length = $slides.children('.slide').length;
+                direction = $(this).data('horzNav'),
+                distance = direction === "prev" ? -($(window).width() * (currentIndex - 1)) : -($(window).width() * (currentIndex + 1));
+
+            if ( (direction === "prev" && currentIndex !== 0 ) || (direction == "next" && (currentIndex + 1)/length !== 1) ) {
+                self.transitionHorzSlide($slides, distance);
+                direction === "prev" ? $currentActive.prev().addClass('active') : $currentActive.next().addClass('active');
+                $currentActive.removeClass('active');
+            }
+        });
+
         $(window).on('scroll', self.throttle(function () {
             self.checkActiveSlide();
             self.determineScrollDir();
-        }, 50));
+        }, 100));
 
         $(window).resize(self.throttle(function(event) {
             self.setSlideHeight()
@@ -242,6 +295,7 @@ var slideNavigation = {
         this.wrapElement($(this.conf.slideWrapper), '<div class="slide__align"></div>');
         this.setSlideHeight();
         this.setFirstSlideActive();
+        this.createHorizontalSlide();
         this.setSlideId();
         this.scrollToSlideOnLoad();
         this.scrollToIntroSlide(this.conf.introSlide);

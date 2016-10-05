@@ -56,6 +56,27 @@ h1 {
     margin: auto;
 }
 
+.slidesWrapper {
+    position: relative;
+    float: left;
+    transition: all 700ms ease;
+}
+
+.horizontal-slides {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease-out;
+    z-index: 1;
+}
+
+.sn-slides {
+    display: table;
+    float: left;
+    height: 100%;
+    table-layout: fixed;
+}
+
 .navigation {
     left: 20px;
     position: fixed;
@@ -76,7 +97,7 @@ h1 {
 }
 
 .navigation__anchor + .navigation__anchor {
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 .anchor__link {
@@ -100,31 +121,66 @@ h1 {
     position: absolute;
     right: 0;
     top: 50%;
+    transition: all .2s ease-out;
     width: 5px;
     z-index: 10;
 }
 
 .anchor__link:hover .anchor__item {
-    height: 7px;
-    opacity: 1;
-    width: 7px;
-}
-
-.navigation__anchor.active .anchor__item {
     height: 10px;
-    margin: -5px auto 0;
+    opacity: 1;
     width: 10px;
 }
 
+.navigation__anchor.active .anchor__item {
+    height: 13px;
+    margin: -5px auto 0;
+    width: 13px;
+}
+
 .tooltip {
+    cursor: pointer;
+    font-family: 'Helvetica', sans-serif;
     opacity: 0;
     position: absolute;
     text-align: left;
-    top: -2px;
+    text-transform: capitalize;
+    top: 0px;
+    transition: all .2s ease-out;
+    width: 0;
+}
+
+.horz-nav__btn {
+    background-color: #fff;
+    border: 2px solid transparent;
+    color: #000;
+    font-family: 'Helvetica', sans-serif;
+    padding: 10px 20px;
+    text-decoration: none;
+    transition: all .3s ease-out;
+}
+
+.horz-nav__btn + .horz-nav__btn {
+    margin-left: 10px;
+}
+
+.horz-nav__btn:hover {
+    background-color: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+}
+
+.horizontal-nav {
+    bottom: 5vh;
+    display: inline-block;
+    left: 10vw;
+    position: absolute;
+    z-index: 10;
 }
 
 .anchor__link:hover + .tooltip {
     opacity: 1;
+    width: auto;
 }
 
 .tooltip.tooltip--left {
