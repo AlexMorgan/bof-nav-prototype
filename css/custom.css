@@ -7,6 +7,10 @@ body {
     padding: 0;
 }
 
+h1 {
+    margin: 0;
+}
+
 .card-detail__wrapper {
     color: #fff;
 }
@@ -50,4 +54,79 @@ body {
 .slide__wrapper {
     max-width: 900px;
     margin: auto;
+}
+
+.navigation {
+    left: 20px;
+    position: fixed;
+    top: 50%;
+    z-index: 1;
+}
+
+.navigation__items {
+    list-style: none;
+    padding: 0;
+}
+
+.navigation__anchor {
+    color: #fff;
+    height: 15px;
+    position: relative;
+    width: 15px;
+}
+
+.navigation__anchor + .navigation__anchor {
+    margin-top: 10px;
+}
+
+.anchor__link {
+    display: block;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.anchor__item {
+    background-color: #fff;
+    border-radius: 100%;
+    display: block;
+    height: 5px;
+    left: 0;
+    margin: -2.5px auto 0;
+    opacity: 0.75;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 5px;
+    z-index: 10;
+}
+
+.anchor__link:hover .anchor__item {
+    height: 7px;
+    opacity: 1;
+    width: 7px;
+}
+
+.navigation__anchor.active .anchor__item {
+    height: 10px;
+    margin: -5px auto 0;
+    width: 10px;
+}
+
+.tooltip {
+    opacity: 0;
+    position: absolute;
+    text-align: left;
+    top: -2px;
+}
+
+.anchor__link:hover + .tooltip {
+    opacity: 1;
+}
+
+.tooltip.tooltip--left {
+    left: 20px;
 }

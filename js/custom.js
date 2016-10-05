@@ -1,31 +1,39 @@
 var slideNavigation = {
     conf: {
+        introSlide: 'welcome',
+        navigation: '.navigation',
+        slideContainer: '.js-container',
         slideWrapper: '.js-slide__wrapper'
     },
 
-    selectors: {
+    selections: {
+        $navigationAnchor: $('.js-navigation__anchor'),
         $slide: $('.js-container')
     },
 
     settings: {
-        isDev: true,
-        lastScrollTop: 0
+        isDev: false,
+        lastScrollTop: 0,
     },
 
     activateNextSlide: function() {
         var $activeSlide = this.currentActiveSlide(),
-            $nextActiveSlide = $activeSlide.next();
+            $nextActiveSlide = $activeSlide.next(),
+            anchor = $nextActiveSlide.data('anchor');
 
             this.removeCurrentActiveSlide();
+            this.setActiveNavItem(anchor);
             $nextActiveSlide.addClass('active');
     },
 
     activatePrevSlide: function() {
         var $activeSlide = this.currentActiveSlide(),
             $prevActiveSlide = $activeSlide.prev();
+            anchor = $prevActiveSlide.data('anchor');
 
             // Dont remove active class on first slide on scroll up
             $activeSlide.data('slideId') !== 0 && this.removeCurrentActiveSlide();
+            $activeSlide.data('slideId') !== 0 && this.setActiveNavItem(anchor);
             $prevActiveSlide.addClass('active');
     },
 
@@ -35,27 +43,19 @@ var slideNavigation = {
         if (direction === 'down') {
             if ( this.calcNextSlideDepth(direction) <= 0 ) {
                 this.activateNextSlide();
+                this.updateHash();
             }
         } else if (direction === 'up') {
             if ( this.calcNextSlideDepth(direction) >= 0 ) {
                 this.activatePrevSlide();
+                this.updateHash();
             }
         }
     },
 
     calcNextSlideDepth: function(dir) {
         var scrollTop     = $(window).scrollTop(),
-            elementOffset = dir === "down" ? $('.container.active').next().offset().top : elementOffset = $('.container.active').offset().top,
-            distance      = (elementOffset - scrollTop);
-
-            this.settings.isDev === true && console.log('Distance: ', distance);
-
-            return distance;
-    },
-
-    calcPrevSlideDepth: function() {
-        var scrollTop     = $(window).scrollTop(),
-            elementOffset = $('.container.active').offset().top,
+            elementOffset = dir === "down" ? $(this.conf.slideContainer + '.active').next().offset().top : elementOffset = $(this.conf.slideContainer + '.active').offset().top,
             distance      = (elementOffset - scrollTop);
 
             this.settings.isDev === true && console.log('Distance: ', distance);
@@ -65,6 +65,31 @@ var slideNavigation = {
 
     calcSlideHeight: function() {
         return window.innerHeight;
+    },
+
+    createNavigation: function() {
+        var list = '<ul class="navigation__items"></ul>',
+            wrapper = '<div class="navigation"></div>',
+            $list = $(list);
+
+        var keys = this.selections.$slide.map(function(i, val) {
+            return $(this).data('anchor');
+        });
+
+        for (i=0; i < keys.length; i++) {
+            var listItem = '<li data-nav-anchor="' + keys[i] + '" class="js-navigation__anchor navigation__anchor"><a class="anchor__link" href="#' + keys[i] + '"><span class="anchor__item"></span></a><div class="tooltip tooltip--left">' + keys[i] + '</div></li>';
+            $list.append(listItem);
+        }
+
+        $('.main-content').append($list);
+
+        $('.js-navigation__anchor').first().addClass('active');
+
+        this.wrapElement($list, wrapper);
+    },
+
+    currentActiveSlide: function() {
+        return $activeSlide = $(this.conf.slideContainer + '.active');
     },
 
     determineScrollDir: function() {
@@ -81,12 +106,23 @@ var slideNavigation = {
         return direction;
     },
 
+    get: function() {
+        var map = {};
+        location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m, k, v){
+            map[k] = v;
+        });
+        return map;
+    },
+
     logMsg: function(msg) {
         console.log(msg);
     },
 
-    currentActiveSlide: function() {
-        return $activeSlide = $('.container.active');
+    positionNavigation: function() {
+        // Calculate height of navigation item, divide it by 2 and then add that style to the .navigation element
+        var height = $(this.conf.navigation).innerHeight()/2;
+
+        $(this.conf.navigation).css('marginTop', -height);
     },
 
     removeCurrentActiveSlide: function() {
@@ -95,15 +131,24 @@ var slideNavigation = {
         $activeSlide.removeClass('active');
     },
 
+    scrollToSlide: function(el) {
+        $("html, body").animate({ scrollTop: $(el).offset().top }, 500);
+    },
+
+    setActiveNavItem: function(anchor) {
+        $('.js-navigation__anchor').removeClass('active');
+        $('[data-nav-anchor="' + anchor + '"]').addClass('active');
+    },
+
     setFirstSlideActive: function() {
-        this.selectors.$slide.first().addClass('active');
+        this.selections.$slide.first().addClass('active');
     },
 
 
     setSlideHeight: function() {
         var self = this;
 
-        this.selectors.$slide.each(function(index,val) {
+        this.selections.$slide.each(function(index,val) {
             $(val).css('height', self.calcSlideHeight());
             $(val).children('.slide__align').css('height', self.calcSlideHeight());
         });
@@ -111,8 +156,26 @@ var slideNavigation = {
 
     setSlideId: function() {
         $('.container').each(function(i,v){
-            $(this).data('slideId', i);
+            var $this = $(this);
+
+            $this.data('slideId', i);
         });
+    },
+
+    scrollToIntroSlide: function(anchor) {
+        // Only scroll to intro slide if page isn't being shared
+        if (!window.location.hash) {
+            this.scrollToSlide('[data-anchor="' + anchor + '"]');
+        }
+    },
+
+    scrollToSlideOnLoad: function() {
+        if (!!window.location.hash) {
+            var hash = window.location.hash,
+                anchor = hash.substring(1);
+
+            this.scrollToSlide('[data-anchor="' + anchor + '"]');
+        }
     },
 
     throttle: function(fn, threshhold, scope) {
@@ -138,12 +201,29 @@ var slideNavigation = {
       };
     },
 
-    wrapElement: function(el, wrapStr) {
-        $( el).wrap(wrapStr);
+    updateHash: function() {
+        var $activeSlide = this.currentActiveSlide(),
+            hash = $activeSlide.data('anchor');
+
+            window.location.hash = hash;
+    },
+
+    wrapElement: function($el, wrapStr) {
+        $el.wrap(wrapStr);
     },
 
     bind: function() {
         var self = this;
+
+        $('body').on('click','.js-navigation__anchor', function() {
+            var anchor = $(this).data('navAnchor');
+            console.log(anchor);
+
+            $('.js-navigation__anchor').removeClass('active');
+            $('[data-nav-anchor="' + anchor + '"]').addClass('active');
+
+            self.scrollToSlide('[data-anchor="' + anchor + '"]');
+        });
 
         $(window).on('scroll', self.throttle(function () {
             self.checkActiveSlide();
@@ -152,15 +232,19 @@ var slideNavigation = {
 
         $(window).resize(self.throttle(function(event) {
             self.setSlideHeight()
-        }, 500));
+        }, 100));
     },
 
     init: function() {
         this.bind();
-        this.wrapElement(this.conf.slideWrapper, '<div class="slide__align"></div>');
+        this.createNavigation();
+        this.positionNavigation();
+        this.wrapElement($(this.conf.slideWrapper), '<div class="slide__align"></div>');
         this.setSlideHeight();
         this.setFirstSlideActive();
         this.setSlideId();
+        this.scrollToSlideOnLoad();
+        this.scrollToIntroSlide(this.conf.introSlide);
     }
 };
 
