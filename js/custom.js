@@ -1,65 +1,56 @@
 var slideNavigation = {
     conf: {
-        introSlide: 'welcome',
-        navigation: '.navigation',
-        slideContainer: '.js-container',
-        slideWrapper: '.js-slide__wrapper',
+        introSlide:      'welcome',
+        navigation:      '.navigation',
+        slideContainer:  '.js-container',
+        slideWrapper:    '.js-slide__wrapper',
         horizontalSlide: '.js-slide'
     },
 
     selections: {
         $navigationAnchor: $('.js-navigation__anchor'),
-        $slideContainer: $('.js-container'),
-        $horizontalSlide: $('.js-slide')
+        $slideContainer:   $('.js-container'),
+        $horizontalSlide:  $('.js-slide')
     },
 
     settings: {
-        isDev: false,
+        isDev: true,
         lastScrollTop: 0,
     },
 
-    activateNextSlide: function() {
-        var $activeSlide = this.currentActiveSlide(),
-            $nextActiveSlide = $activeSlide.next(),
-            anchor = $nextActiveSlide.data('anchor');
+    activateNextSlide: function(direction) {
+        var $activeSlide      = this.currentActiveSlide(),
+            $nextActiveSlide  = direction === 'down' ? $activeSlide.next() : $activeSlide.prev();
+            anchor            = $nextActiveSlide.data('anchor');
 
             this.removeCurrentActiveSlide();
             this.setActiveNavItem(anchor);
             $nextActiveSlide.addClass('active');
     },
 
-    activatePrevSlide: function() {
-        var $activeSlide = this.currentActiveSlide(),
-            $prevActiveSlide = $activeSlide.prev();
-            anchor = $prevActiveSlide.data('anchor');
-
-            // Dont remove active class on first slide on scroll up
-            $activeSlide.data('slideId') !== 0 && this.removeCurrentActiveSlide();
-            $activeSlide.data('slideId') !== 0 && this.setActiveNavItem(anchor);
-            $prevActiveSlide.addClass('active');
-    },
-
     checkActiveSlide: function() {
-        var direction = this.determineScrollDir(),
-            slideHeight = this.calcSlideHeight(); // Use slide height and set the next slide to active when at halfway point
+        var direction        = this.determineScrollDir(),
+            slideHeight      = this.calcSlideHeight(), // Use slide height and set the next slide to active when at halfway point
+            transitionPoint  = slideHeight/2,
+            depth            = this.calcNextSlideDepth(direction);
 
         if (direction === 'down') {
-            if ( this.calcNextSlideDepth(direction) <= 0 ) {
-                this.activateNextSlide();
+            if ( depth >= transitionPoint) {
+                this.activateNextSlide(direction);
                 this.updateHash();
             }
         } else if (direction === 'up') {
-            if ( this.calcNextSlideDepth(direction) >= 0) {
-                this.activatePrevSlide();
+            if ( depth <= -transitionPoint) {
+                this.activateNextSlide(direction);
                 this.updateHash();
             }
         }
     },
 
     calcNextSlideDepth: function(dir) {
-        var scrollTop     = $(window).scrollTop(),
-            elementOffset = dir === "down" ? $(this.conf.slideContainer + '.active').next().offset().top : elementOffset = $(this.conf.slideContainer + '.active').offset().top,
-            distance      = (elementOffset - scrollTop);
+        var scrollTop           = $(window).scrollTop(),
+            elementOffset       = this.currentActiveSlide().offset().top,
+            distance            = -(elementOffset - scrollTop);
 
             this.settings.isDev === true && console.log('Distance: ', distance);
 
@@ -75,32 +66,32 @@ var slideNavigation = {
 
         this.selections.$slideContainer.each(function(i,v) {
             var slidesLength = $(this).find('.js-slide').length;
+                $this = $(this);
 
             if (slidesLength > 0) {
                 var slideWidthPerc = 100/slidesLength + '%',
                     slidesContainerPerc = 100 * slidesLength + '%';
 
-                $(this).find('.js-slide').css('width', slideWidthPerc)
+                $this.find('.js-slide').css('width', slideWidthPerc)
                     .addClass('sn-slides')
                     .wrapAll('<div class="slidesWrapper" style="width:' + slidesContainerPerc + ';"></div>');
 
                 $('.slidesWrapper').wrap('<div class="horizontal-slides"></div>');
 
-                $('.horizontal-slides').append('<div class="horizontal-nav"><a data-horz-nav="prev" class="horz-nav__btn horz-nav--prev" href="#">Prev</a> <a data-horz-nav="next" class="horz-nav__btn horz-nav--next" href="#">Next</a></div>');
-                // self.createHorizontalNav();
+                self.createHorizontalNav($this);
                 self.setInitActiveHorzSlide(); // Set the active slide within this container
             }
         });
     },
 
-    createHorizontalNav: function() {
-        $('.slidesWrapper').append('<div class="horizontal-nav"><a data-horz-nav="prev" class="horz-nav__btn horz-nav--prev" href="#">Prev</a> <a data-horz-nav="next" class="horz-nav__btn horz-nav--next" href="#">Next</a></div>');
+    createHorizontalNav: function($el) {
+        $el.find('.horizontal-slides').append('<div class="horizontal-nav"><a data-horz-nav="prev" class="horz-nav__btn horz-nav--prev" href="#">Prev</a> <a data-horz-nav="next" class="horz-nav__btn horz-nav--next" href="#">Next</a></div>');
     },
 
     createNavigation: function() {
-        var list = '<ul class="navigation__items"></ul>',
-            wrapper = '<div class="navigation"></div>',
-            $list = $(list);
+        var list     = '<ul class="navigation__items"></ul>',
+            wrapper  = '<div class="navigation"></div>',
+            $list    = $(list);
 
         var keys = this.selections.$slideContainer.map(function(i, val) {
             return $(this).data('anchor');
