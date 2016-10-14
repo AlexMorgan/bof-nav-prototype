@@ -1,21 +1,28 @@
 var slideNavigation = {
     conf: {
-        introSlide:      'welcome',
-        navigation:      '.navigation',
-        slideContainer:  '.js-container',
-        slideWrapper:    '.js-slide__wrapper',
-        horizontalSlide: '.js-slide'
+        body:             '.body',
+        introSlide:       'welcome',
+        navigation:       '.navigation',
+        navigationAnchor: '.js-navigation__anchor',
+        slideContainer:   '.js-container',
+        slideWrapper:     '.js-slide__wrapper',
+        horizontalSlide:  '.js-slide'
     },
 
     selections: {
+        $body:             $('.body'),
+        $horizontalSlide:  $('.js-slide'),
         $navigationAnchor: $('.js-navigation__anchor'),
         $slideContainer:   $('.js-container'),
-        $horizontalSlide:  $('.js-slide')
+        $slideWrapper:     $('.js-slide__wrapper')
     },
 
     settings: {
-        isDev: true,
-        lastScrollTop: 0,
+        isDev:            false,
+        lastScrollTop:    0,
+        veilSlides:       true,
+        slidesCount:      $('.container').length,
+        slideScrollSpeed: 600
     },
 
     activateNextSlide: function(direction) {
@@ -26,6 +33,15 @@ var slideNavigation = {
             this.removeCurrentActiveSlide();
             this.setActiveNavItem(anchor);
             $nextActiveSlide.addClass('active');
+    },
+
+    appendVeilToBody: function() {
+        if (this.settings.veilSlides) {
+            var upperVeil = "<div class='slide-veil slide-veil--up'></div>",
+                lowerVeil = "<div class='slide-veil slide-veil--down'></div>";
+
+            $('body').append(lowerVeil).prepend(upperVeil);
+        }
     },
 
     checkActiveSlide: function() {
@@ -135,6 +151,12 @@ var slideNavigation = {
         return map;
     },
 
+    hideVeil: function(delay) {
+        var timeout = delay ? delay : 700;
+
+        setTimeout(function(){ $('body').removeClass('veil-up veil-down'); }, timeout);
+    },
+
     logMsg: function(msg) {
         console.log(msg);
     },
@@ -152,8 +174,30 @@ var slideNavigation = {
         $activeSlide.removeClass('active');
     },
 
-    scrollToSlide: function(el) {
-        $("html, body").animate({ scrollTop: $(el).offset().top }, 500);
+    scrollToIntroSlide: function(anchor) {
+        // Only scroll to intro slide if page isn't being shared
+        if (!window.location.hash) {
+            this.scrollToSlide('[data-anchor="' + anchor + '"]');
+        }
+    },
+
+    scrollToSlide: function(el, cb) {
+        var self = this;
+
+        $("html, body").animate({ scrollTop: $(el).offset().top }, self.settings.slideScrollSpeed, function() {
+            if(cb && typeof cb == "function") {
+                cb();
+            }
+        });
+    },
+
+    scrollToSlideOnLoad: function() {
+        if (!!window.location.hash) {
+            var hash = window.location.hash,
+                anchor = hash.substring(1);
+
+            this.scrollToSlide('[data-anchor="' + anchor + '"]');
+        }
     },
 
     setActiveNavItem: function(anchor) {
@@ -186,22 +230,6 @@ var slideNavigation = {
         });
     },
 
-    scrollToIntroSlide: function(anchor) {
-        // Only scroll to intro slide if page isn't being shared
-        if (!window.location.hash) {
-            this.scrollToSlide('[data-anchor="' + anchor + '"]');
-        }
-    },
-
-    scrollToSlideOnLoad: function() {
-        if (!!window.location.hash) {
-            var hash = window.location.hash,
-                anchor = hash.substring(1);
-
-            this.scrollToSlide('[data-anchor="' + anchor + '"]');
-        }
-    },
-
     throttle: function(fn, threshhold, scope) {
       threshhold || (threshhold = 250);
       var last,
@@ -225,6 +253,10 @@ var slideNavigation = {
       };
     },
 
+    showVeil: function(isDown) {
+        isDown ? $('body').addClass('veil-down') : $('body').addClass('veil-up');
+    },
+
     transitionHorzSlide: function($el, distance) {
         $el.css('transform', 'translateX(' + distance + 'px)');
     },
@@ -236,6 +268,13 @@ var slideNavigation = {
             window.location.hash = hash;
     },
 
+    updateActiveSlideOnclick: function(anchor) {
+        this.selections.$navigationAnchor.removeClass('active');
+        $('[data-nav-anchor="' + anchor + '"]').addClass('active');
+
+        this.scrollToSlide('[data-anchor="' + anchor + '"]', this.hideVeil);
+    },
+
     wrapElement: function($el, wrapStr) {
         $el.wrap(wrapStr);
     },
@@ -243,14 +282,16 @@ var slideNavigation = {
     bind: function() {
         var self = this;
 
-        $('body').on('click','.js-navigation__anchor', function() {
-            var anchor = $(this).data('navAnchor');
-            console.log(anchor);
+        $('body').on('click', self.conf.navigationAnchor, function() {
+            var $this  = $(this);
+                anchor = $this.data('navAnchor'),
+                nextSlideIndex = $('[data-anchor="' + anchor + '"]').index(),
+                currentSlideIndex = $('.js-container.active').index();
+                isDown = nextSlideIndex > currentSlideIndex ? true : false;
 
-            $('.js-navigation__anchor').removeClass('active');
-            $('[data-nav-anchor="' + anchor + '"]').addClass('active');
+            self.showVeil(isDown);
 
-            self.scrollToSlide('[data-anchor="' + anchor + '"]');
+            self.updateActiveSlideOnclick(anchor);
         });
 
         $('body').on('click', '.horz-nav--prev, .horz-nav--next', function(e) {
@@ -283,13 +324,14 @@ var slideNavigation = {
         this.bind();
         this.createNavigation();
         this.positionNavigation();
-        this.wrapElement($(this.conf.slideWrapper), '<div class="slide__align"></div>');
+        this.wrapElement(this.selections.$slideWrapper, '<div class="slide__align"></div>');
         this.setSlideHeight();
         this.setFirstSlideActive();
         this.createHorizontalSlide();
         this.setSlideId();
         this.scrollToSlideOnLoad();
         this.scrollToIntroSlide(this.conf.introSlide);
+        this.appendVeilToBody();
     }
 };
 

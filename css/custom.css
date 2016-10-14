@@ -1,10 +1,13 @@
 * {
     box-sizing: border-box;
+    font-family: sans-serif;
+    font-weight: normal;
 }
 
 body {
     margin: 0;
     padding: 0;
+    position: relative;
 }
 
 h1 {
@@ -189,4 +192,33 @@ h1 {
 
 .tooltip.tooltip--left {
     left: 20px;
+}
+
+body.veil-up .slide-veil--up {
+    opacity: 1;
+    transform: translateY(100vh);
+}
+
+body.veil-down .slide-veil--down {
+    opacity: 1;
+    transform: translateY(-100vh);
+}
+
+.slide-veil {
+    background-color: #E37179;
+    height: 100vh;
+    left: 0;
+    /*opacity: 0;*/
+    position: fixed;
+    transition: all 0.3s ease-out;
+    width: 100vw;
+    z-index: 100;
+}
+
+.slide-veil--up {
+    top: -100vh;
+}
+
+.slide-veil--down {
+    top: 100vh;
 }
